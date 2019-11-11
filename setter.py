@@ -7,15 +7,17 @@ from pickler import *
 # App sets times, removes times, checks times
 # TODO: get times from pickle file
 # TODO: remove overdue times
+# TODO: pick better variable names so it's more obvious what's going on
+# apps should be new_apps, and times should be ban_times
 
 
 class Setter:
     def __init__(self, args):
         try:
-            self.minutes = int(args[-1])
+            self.timestamp = time.time() + int(args[-1])*60
             self.apps = args[:-1]
         except ValueError:
-            self.minutes = 0
+            self.timestamp = time.time()
             self.apps = []
         self.times = loader("times")
 
@@ -30,13 +32,14 @@ class Setter:
         :returns: Returns dictionary with the app name (key) and the
         time it should be blocked until (value).
         """
-        return {app: time.time() + self.minutes*60 for app in self.apps}
+        return {app: self.timestamp for app in self.apps}
 
     def update_times(self):
-        # TODO: update times. How this works is you get the times (duh),
-        #  if the new apps are already in the file, check if the new times
-        #  are later, then update. Add new times as well.
-        pass
+        new_apps = list(filter(
+            lambda app: self.timestamp > self.times.get(app, default=0),
+            self.apps))
+        for app in new_apps:
+            self.times[app] = self.timestamp
 
 
 
